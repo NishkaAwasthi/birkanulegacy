@@ -131,4 +131,28 @@ epochs = 2
 print(endl, "Fitting the top layer of the model")
 model.fit(train_ds, epochs=epochs, validation_data=valid_ds)
 
+#? Fine Tuning
+# Unfreeze the base_model. Note that it keeps running in inference mode
+# since we passed `training=False` when calling it. This means that
+# the batchnorm layers will not update their batch statistics.
+# This prevents the batchnorm layers from undoing all the training
+# we've done so far.
+
+base_model.trainable = True
+model.summary(show_trainable=True)
+
+model.compile(
+    optimizer=keras.optimizers.Adam(1e-5),  # Low learning rate
+    loss=keras.losses.BinaryCrossentropy(from_logits=True),
+    metrics=[keras.metrics.BinaryAccuracy()],
+)
+
+epochs = 1
+print("Fitting the end-to-end model")
+model.fit(train_ds, epochs=epochs, validation_data=valid_ds)
+
+#? Test Dataset Evaluation
+print(endl, "Test dataset evaluation")
+model.evaluate(test_ds)
+
 print(ttl, "PROGRAM FINISHED", endl)
