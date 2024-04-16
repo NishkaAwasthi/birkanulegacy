@@ -26,6 +26,7 @@ train_ds, valid_ds, test_ds = tfds.load(
     as_supervised=True,  # dataset returned as (input, label), 
     # Input = images of cats or dogs, Label is 0 for cat, 1 for dog.
 )
+
 # After first run:
 # Dataset cats_vs_dogs downloaded and prepared to 
 # /Users/nishkaawasthi/tensorflow_datasets/cats_vs_dogs/4.0.1. 
@@ -117,8 +118,9 @@ x = keras.layers.Dropout(0.2)(x)  # Regularize with dropout
 outputs = keras.layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
-print(endl*3)
+print(endl*2)
 model.summary(show_trainable=True)
+print(endl*2)
 
 #? Train the Model
 model.compile(
@@ -139,7 +141,9 @@ model.fit(train_ds, epochs=epochs, validation_data=valid_ds)
 # we've done so far.
 
 base_model.trainable = True
+print(endl*2)
 model.summary(show_trainable=True)
+print(endl*2)
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-5),  # Low learning rate
@@ -148,7 +152,7 @@ model.compile(
 )
 
 epochs = 1
-print("Fitting the end-to-end model")
+print(endl, "Fitting the end-to-end model")
 model.fit(train_ds, epochs=epochs, validation_data=valid_ds)
 
 #? Test Dataset Evaluation
