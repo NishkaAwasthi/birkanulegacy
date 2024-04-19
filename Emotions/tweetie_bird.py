@@ -1,13 +1,14 @@
 # My First NLP Project
 
 #& MY GOAL
-# My goal is to use a pretrained AI model to determine which emotion is
-# expressed in a given tweet.
+# My goal is to use a pretrained AI model to determine which 
+# emotion is expressed in a given tweet.
 
 #& DATA SET BACKGROUND
 # "Emotions" by NIDULA ELGIRIYEWITHANA off of Kaggle
-# collection of English Twitter messages meticulously annotated with six 
-# fundamental emotions: anger, fear, joy, love, sadness, and surprise. 
+# collection of English Twitter messages meticulously 
+# annotated with six fundamental emotions: anger, fear, 
+# joy, love, sadness, and surprise. 
 
 import keras
 import keras_nlp
@@ -59,12 +60,15 @@ raw_df.drop(columns=['id'], inplace=True)
 #? SECOND STEP: Convert this into smth we can use
 print(ttl, "MAKING MODEL", div)
 
-# Split the DataFrame into training and testing sets
-raw_df_sample = raw_df.sample(frac=0.01, random_state=42)  # 40% of the data
+# Split the DataFrame into training and testing sets 
+raw_df_sample = raw_df.sample(frac=0.01, random_state=42) 
+
 print("Number of rows:", raw_df.shape[0])
 print("Number of rows in subset:", raw_df_sample.shape[0])
 
-train_df, test_df = train_test_split(raw_df_sample, test_size=0.2, random_state=42)  # Adjust test_size as needed
+train_df, test_df = train_test_split(raw_df_sample, 
+                                        test_size=0.2, 
+                                        random_state=42) 
 
 # Convert the DataFrame subsets into TensorFlow datasets
 train_ds = tf.data.Dataset.from_tensor_slices((train_df['text'].values, 
@@ -72,40 +76,80 @@ train_ds = tf.data.Dataset.from_tensor_slices((train_df['text'].values,
 test_ds = tf.data.Dataset.from_tensor_slices((test_df['text'].values, 
                                                 test_df['label'].values))
 
-print(train_ds.element_spec, endl)  # Check the structure of the dataset elements
+print("What am i printing?")  
+print(train_ds.element_spec, endl)  
 
-# Shuffle and batch the datasets
+# Shuffle, batch, prefetch, cache the datasets
 BATCH_SIZE = 8
 train_ds = train_ds.shuffle(len(train_df)).batch(BATCH_SIZE)
 test_ds = test_ds.batch(BATCH_SIZE)
 
-# Optionally, you can also prefetch and cache the datasets for better performance
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
-test_ds = test_ds.prefetch(tf.data.AUTOTUNE)
+# train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+# test_ds = test_ds.prefetch(tf.data.AUTOTUNE)
 
+print("What am i printing?")  
 print(train_ds.unbatch().take(1).get_single_element())
 print(endl)
 
-classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_base_en_uncased",
-    num_classes=6 
-)
+# classifier = keras_nlp.models.BertClassifier.from_preset(
+#     "bert_tiny_en_uncased",
+#     num_classes=6 
+# )
+# #& bert_tiny_en_uncased
+# # 2-layer BERT model where all input is lowercased. 
+# # Trained on English Wikipedia + BooksCorpus.
+
 
 #* How well does it work for with zero training whatsoever?
-classifier.evaluate(test_ds)
-
-trythis = input("Try string: ")
-while trythis.lower() != 'done':
-    prediction = classifier.predict([trythis])
-    print('Classifier prediction:', prediction)
-    trythis = input("Try string: ")
-
+# classifier.evaluate(test_ds) # Did not work well!!: 0.0274
+# print(endl)
 
 # #* Let's train it
 # classifier.fit(
 #     train_ds,
 #     validation_data=test_ds,
-#     epochs=1,
+#     epochs=6,
 # )
+# print(endl)
 
-print(ttl, "fin")
+# #* Let's preprocess data? 
+preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
+    "bert_tiny_en_uncased",
+    sequence_length=512,
+)
+train_cached = (
+    train_ds.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
+)
+test_cached = (
+    test_ds.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
+)
+classifier = keras_nlp.models.BertClassifier.from_preset(
+    "bert_tiny_en_uncased",
+    preprocessor=None,
+    num_classes=6 
+)
+#& bert_tiny_en_uncased
+# 2-layer BERT model where all input is lowercased. 
+# Trained on English Wikipedia + BooksCorpus.
+
+#* Let's train it
+classifier.fit(
+    train_cached,
+    validation_data=test_cached,
+    epochs=6,
+)
+print(endl)
+
+classifier.evaluate(test_ds)
+print(endl)
+
+# trythis = input("Try string: ")
+# while trythis.lower() != 'done':
+#     prediction = classifier.predict([trythis])
+#     print('Classifier prediction:', prediction)
+#     trythis = input("Try string: ")
+
+print(ttl, "fin", endl)
+
+
+#Original : 0.8467
