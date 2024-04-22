@@ -58,6 +58,8 @@ print(ttl, "3. DATA EXPLORATION:", div)
 num_cols = raw_dataset.select_dtypes(include=['float64', 'int64'])
 print("Correlation Table:")
 print(num_cols.corr())
+print(num_cols.corr())
+print(num_cols.corr())
 
 plt.figure(figsize=(12, 12))
 htmp = sns.heatmap(num_cols.corr(), 
