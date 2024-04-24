@@ -4,7 +4,7 @@ from PyPDF2 import PdfReader
 import docx # to read word files --> pip install python-docx
 
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.vectorstores import FAISS # metaAI to compare embeddings/vector comparisons
 from langchain_community.llms import OpenAI
@@ -61,16 +61,15 @@ char_text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000,
 text_chunks = char_text_splitter.split_text(text)
 
 # create embeddings
-# embeddings = OpenAIEmbeddings()
-# docsearch = FAISS.from_texts(text_chunks, embeddings)
+embeddings = OpenAIEmbeddings()
+docsearch = FAISS.from_texts(text_chunks, embeddings)
 
-llm = OpenAI()
+llm = Openai()
 chain = load_qa_chain(llm, chain_type="stuff")
 # ---------------------------------------------------------------------------------
 
 # Ask a question
-#query  = "What is the significance of 42?"
-query  = "Who are the main characters in Jungle Book"
+query  = "Who are the main characters in Percy Jackson?"
 
 docs = docsearch.similarity_search(query )
  
@@ -78,11 +77,6 @@ response = chain.run(input_documents=docs, question=query )
 print(" ")
 print(query)
 print(response)
-  
-#If you want to keep track of your spending
-with get_openai_callback() as cb:
-    response = chain.run(input_documents=docs, question=query ) 
-    print(cb)
 
 
 #? What's the difference between embedding and fine tuning?
@@ -96,4 +90,42 @@ with get_openai_callback() as cb:
 # and the book. It cannot generate NEW ideas or concepts or interpretations not 
 # directly in the book.
 
+# If the text contains explicit mentions or discussions of the main theme, and 
+# if the question-answering model is trained well, it should be able to provide 
+# a meaningful response. However, the accuracy of the response depends on 
+# various factors such as the quality of the text extraction, the 
+# comprehensiveness of the training data, and the capabilities of the 
+# question-answering model.
+
 #? Wait so how is this even AI? Isn't this just a glorified Cmd-F?
+# While on the surface it might seem similar to a traditional text search 
+# function like Cmd-F, the approach here involves several layers of AI 
+# technology working together to provide a more nuanced and context-aware 
+# response.
+
+# Text Embeddings: The text from the documents is transformed into numerical 
+# representations (embeddings) using a deep learning model. These embeddings 
+# capture semantic meaning and relationships between words and sentences, going 
+# beyond simple keyword matching.
+
+# Similarity Search: The embeddings are then used to perform similarity search, 
+# which goes beyond basic string matching. It finds documents that are 
+# semantically similar to the query, even if they don't contain the exact same 
+# words.
+
+# Question Answering Model: The retrieved documents are then passed to a 
+# question-answering model. This model is trained to understand natural language 
+# questions and extract relevant information from text documents to provide 
+# meaningful answers.
+
+# Feedback Mechanisms: The system may incorporate feedback mechanisms to improve 
+# its performance over time. For example, the get_openai_callback() function 
+# could be used to provide feedback on the quality of the responses, which can 
+# be used to fine-tune the underlying models.
+
+# So, while the initial step of searching for text within documents may resemble 
+# a basic text search, the subsequent steps involve advanced AI techniques that 
+# enable the system to understand context, semantics, and provide more nuanced 
+# answers.
+
+#? So then can this model answer what is the main moral of the story?
